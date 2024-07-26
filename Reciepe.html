@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Book</title>
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+header {
+    background-color: #f8b400;
+    padding: 10px 20px;
+    color: white;
+    text-align: center;
+}
+
+nav button {
+    background-color: #fff;
+    color: #000;
+    margin: 0 10px;
+    padding: 5px 10px;
+    border: none;
+    cursor: pointer;
+}
+
+nav button:hover {
+    background-color: #ccc;
+}
+
+main {
+    padding: 20px;
+}
+
+form {
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+form label, form input, form textarea, form button {
+    margin-bottom: 10px;
+}
+
+.recipe-item {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.recipe-item img {
+    max-width: 100%;
+    height: auto;
+}
+
+.hidden {
+    display: none;
+}
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Recipe Book</h1>
+        <nav>
+            <button id="view-list">View Recipes</button>
+            <button id="add-recipe">Add Recipe</button>
+        </nav>
+    </header>
+    <main>
+        <!-- Recipe List Section -->
+        <section id="recipe-list-section">
+            <div id="recipe-list"></div>
+        </section>
+
+        <!-- Recipe Form Section -->
+        <section id="recipe-form-section" class="hidden">
+            <form id="recipe-form">
+                <label for="recipe-name">Recipe Name:</label>
+                <input type="text" id="recipe-name" required>
+                
+                <label for="ingredients">Ingredients:</label>
+                <textarea id="ingredients" required></textarea>
+                
+                <label for="instructions">Instructions:</label>
+                <textarea id="instructions" required></textarea>
+                
+                <label for="image">Recipe Image:</label>
+                <input type="file" id="image">
+                
+                <button type="submit">Save Recipe</button>
+            </form>
+        </section>
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    const viewListBtn = document.getElementById('view-list');
+    const addRecipeBtn = document.getElementById('add-recipe');
+    const recipeListSection = document.getElementById('recipe-list-section');
+    const recipeFormSection = document.getElementById('recipe-form-section');
+    const recipeForm = document.getElementById('recipe-form');
+    
+    viewListBtn.addEventListener('click', () => toggleSections('list'));
+    addRecipeBtn.addEventListener('click', () => toggleSections('form'));
+
+    recipeForm.addEventListener('submit', saveRecipe);
+    
+    displayRecipes();
+});
+
+const toggleSections = (section) => {
+    const recipeListSection = document.getElementById('recipe-list-section');
+    const recipeFormSection = document.getElementById('recipe-form-section');
+    
+    if (section === 'list') {
+        recipeListSection.classList.remove('hidden');
+        recipeFormSection.classList.add('hidden');
+    } else {
+        recipeListSection.classList.add('hidden');
+        recipeFormSection.classList.remove('hidden');
+        clearForm();
+    }
+}
+
+const getRecipes = () => JSON.parse(localStorage.getItem('recipes')) || [];
+
+const saveRecipe = (event) => {
+    event.preventDefault();
+    
+    const recipeName = document.getElementById('recipe-name').value;
+    const ingredients = document.getElementById('ingredients').value;
+    const instructions = document.getElementById('instructions').value;
+    const image = document.getElementById('image').files[0];
+    
+    const recipes = getRecipes();
+    const newRecipe = {
+        id: Date.now(),
+        name: recipeName,
+        ingredients,
+        instructions,
+        image: image ? URL.createObjectURL(image) : ''
+    };
+    
+    recipes.push(newRecipe);
+    localStorage.setItem('recipes', JSON.stringify(recipes));
+    
+    displayRecipes();
+    toggleSections('list');
+}
+
+const displayRecipes = () => {
+    const recipes = getRecipes();
+    const recipeList = document.getElementById('recipe-list');
+    recipeList.innerHTML = '';
+    
+    recipes.forEach(recipe => {
+        const recipeItem = document.createElement('div');
+        recipeItem.classList.add('recipe-item');
+        recipeItem.innerHTML = `
+            <h2>${recipe.name}</h2>
+            <img src="${recipe.image}" alt="${recipe.name}">
+            <p>${recipe.ingredients}</p>
+            <p>${recipe.instructions}</p>
+            <button onclick="deleteRecipe(${recipe.id})">Delete</button>
+            <button onclick="editRecipe(${recipe.id})">Edit</button>
+        `;
+        recipeList.appendChild(recipeItem);
+    });
+}
+
+const deleteRecipe = (id) => {
+    const recipes = getRecipes().filter(recipe => recipe.id !== id);
+    localStorage.setItem('recipes', JSON.stringify(recipes));
+    displayRecipes();
+}
+
+const editRecipe = (id) => {
+    const recipes = getRecipes();
+    const recipe = recipes.find(recipe => recipe.id === id);
+    
+    document.getElementById('recipe-name').value = recipe.name;
+    document.getElementById('ingredients').value = recipe.ingredients;
+    document.getElementById('instructions').value = recipe.instructions;
+    // Image handling needs to be adjusted for edit functionality
+
+    toggleSections('form');
+}
+
+const clearForm = () => document.getElementById('recipe-form').reset();
+
+    </script>
+</body>
+</html>
